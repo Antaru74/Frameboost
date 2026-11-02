@@ -1,0 +1,40 @@
+name: Build Module Rust
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ekstrak zip
+        run: |
+          ZIP=$(find . -maxdepth 2 -iname "frameboost-rs.zip" -not -path "./.git/*" | head -n 1)
+          [ -n "$ZIP" ] || { echo "frameboost-rs.zip tidak ditemukan"; exit 1; }
+          mkdir -p ex && unzip -q "$ZIP" -d ex
+          echo "PROJ=$(dirname "$(find ex -maxdepth 3 -name Cargo.toml | head -n 1)")" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Build fbd
+        working-directory: ${{ env.PROJ }}
+        run: |
+          NDK_BIN="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          export PATH="$NDK_BIN:$PATH"
+          cargo build --release --target aarch64-linux-android
+
+      - name: Susun modul
+        working-directory: ${{ env.PROJ }}
+        run: |
+          cp target/aarch64-linux-android/release/fbd module/bin/fbd
+          cd module && zip -r ../FrameBoost-Native.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FrameBoost-Native
+          path: ${{ env.PROJ }}/FrameBoost-Native.zip
