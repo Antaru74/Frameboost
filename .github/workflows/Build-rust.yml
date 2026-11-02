@@ -12,7 +12,7 @@ jobs:
 
       - name: Ekstrak zip
         run: |
-          ZIP=$(find . -maxdepth 2 -iname "frameboost-rs2.zip" -not -path "./.git/*" | head -n 1)
+          ZIP=$(find . -maxdepth 2 -iname "frameboost-rs3.zip" -not -path "./.git/*" | head -n 1)
           [ -n "$ZIP" ] || { echo "frameboost-rs.zip tidak ditemukan"; exit 1; }
           mkdir -p ex && unzip -q "$ZIP" -d ex
           echo "PROJ=$(dirname "$(find ex -maxdepth 3 -name Cargo.toml | head -n 1)")" >> "$GITHUB_ENV"
